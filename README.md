@@ -51,7 +51,7 @@ $ ./fluxes.py --help OR $./fluxes.py -h
 
 on Windows:
 
-> fluxes.py --help OR > fluxes.py -h
+\> fluxes.py --help OR > fluxes.py -h
 
 Here is the output:
 
