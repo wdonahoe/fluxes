@@ -1,8 +1,9 @@
 fluxes.py
+==========
 
-author: William Donahoe wdonahoe@udel.edu
+Author: William Donahoe, wdonahoe@udel.edu
 
-This is a small python package that calculates the CO2, CH4, and H2O fluxes for a single LGR output file.
+Description: This is a small python package that calculates the CO2, CH4, and H2O fluxes for a single LGR output file.
 
 Unpack
 ==========
@@ -21,7 +22,7 @@ OR
 This will extract fluxes.py, R_fluxes.R and README.md into a folder "fluxes."
 
 ---------
-On Mac OSX,
+On Mac OSX:
 
 1) cd to the folder containing fluxes.tar.gz on the terminal and type:
 
@@ -32,8 +33,9 @@ OR
 2) Double click on the "fluxes.tar.gz" icon
 
 This will extract fluxes.pt, R_fluxes.R and README.md into a folder "fluxes."
+
 --------
-On Windows,
+On Windows:
 
 Use 7-zip (freeware), PowerArchiver (freeware), or Winzip (commercial) to extract fluxes.tar.gz.
 
@@ -66,23 +68,41 @@ EX:
 
 Time
 06/25/2014 08:06:14.000
+
 06/25/2014 08:11:12.000
+
 06/25/2014 08:15:16.000
+
 06/25/2014 08:19:24.000
+
 06/25/2014 08:23:10.000
+
 06/25/2014 08:27:07.000
+
 06/25/2014 08:31:13.000
+
 06/25/2014 08:35:15.000
+
 06/25/2014 08:40:04.000
+
 06/25/2014 08:44:08.000
+
 06/25/2014 08:48:11.000
+
 06/25/2014 08:52:40.000
+
 06/25/2014 08:56:52.000
+
 06/25/2014 09:01:01.000
+
 06/25/2014 09:20:50.000
+
 06/25/2014 09:25:50.000
+
 06/25/2014 09:30:20.000
+
 06/25/2014 09:34:18.000
+
 06/25/2014 09:39:07.000
 
 =========
