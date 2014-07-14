@@ -4,13 +4,14 @@
 
 args = commandArgs( trailingOnly = TRUE )
 
-#INPUT_FILE <- args[ 1 ]
-INPUT_FILE <- "gga25Jun2014_f0001.txt"
-#GRAPH <- args[ 2 ]
-GRAPH <- T
+INPUT_FILE <- args[ 1 ]
+#INPUT_DIR <- "data"
+GRAPH <- args[ 2 ]
 SCRIPTNAME <- "LGR_fluxes.R"
 OUTPUT_DIR <- "out"
 MEASUREMENTS <- paste0(head(unlist(strsplit(INPUT_FILE,"*.txt"))),"_measurements.txt")
+#FILES <- list.files(path=INPUT_DIR,pattern="*.txt")
+print(INPUT_FILE)
 
 LINE_R <- 0.1 # cm
 SLINE1_L <- 99 # cm
@@ -76,9 +77,11 @@ read_csv <- function( fn ){
   stopifnot( file.exists( fn ) )
   
   data <- read.csv( fn, skip=1, header=T )
+  data$filename <- fn
   
   return( data )
 } #read_csv
+
 
 # ----------------------------------------------------------
 # savedata
@@ -87,7 +90,8 @@ read_csv <- function( fn ){
 #                extension -- file extension. Default = .csv
 savedata <- function( d, extension=".csv" ) {
   stopifnot( file.exists( OUTPUT_DIR ) )
-  fn <- paste0( OUTPUT_DIR, "/", deparse( substitute( d ) ), extension )
+  fn <- paste0( OUTPUT_DIR, "/", head(unlist(strsplit(INPUT_FILE,"*.txt"))), "_", deparse( substitute( d ) ), extension )
+  print(fn)
   printlog( "Saving", fn )
   write.csv( d, fn, row.names=FALSE )
 } # savedata
@@ -96,13 +100,13 @@ plots <- function( raw, cleaned){
   loadlibs(c("xts"))
   
   raw.xts <- as.xts(raw, order.by=as.POSIXct(raw$Time,format=FORMAT))
-  par(mfrow=c(3,1))
-  png("RPlot",width=500,height=250,units="px")
-  d_ply(raw.xts[,2:4,with=FALSE],NULL,.fun=plot.xts,minor.ticks=FALSE)
-  #plot.xts(raw.xts$CO2,minor.ticks=F)
-  #plot.xts(raw.xts$CH4,minor.ticks=F)
-  #plot.xts(raw.xts$H2O,minor.ticks=F)
-  dev.off()
+  names <- c("H2O","CH4","CO2")
+  pdf(file=paste0(OUTPUT_DIR,"/Time_Series_plots.pdf"))
+  par(cex=.7, las=1, bg="#E0FFFF")
+  for (i in seq(4,2)){
+    plot(raw.xts[,i,with=FALSE],major.format=F,minor.ticks=FALSE,main=names[i-1],xlab=NA,ylab=NA)
+  }
+  graphics.off()
 }
 
 # ----------------------------------------------------------------------
@@ -152,8 +156,8 @@ split_at <- function(x, pos) unname(split(x, cumsum(seq_along(x) %in% pos)))
 
 clean <- function( d ){
   # keep the data we need.
-  d <- d[,colnames(d)%in%c("Time","X.CO2.d_ppm","X.CH4.d_ppm","X.H2O._ppm","AmbT_C")]
-  names(d) <- c("Time","H2O","CH4","CO2","T")
+  d <- d[,colnames(d)%in%c("Time","X.CO2.d_ppm","X.CH4.d_ppm","X.H2O._ppm","AmbT_C","filename")]
+  names(d) <- c("Time","H2O","CH4","CO2","T","Filename")
   
   data <- data.table( d )
   setkey(data,Time)
@@ -185,7 +189,7 @@ get_cleaned_data_table <- function( d ) {
   infl <- infl[J(measurements),.I,roll="nearest"]
   
   # get co2 for each experiment, find peak values.
-  data.dco2 <- split_at(d$H2O, infl$.I)[-1]
+  data.dco2 <- split_at(d$CO2, infl$.I)[-1]
   infl$peaks <- infl$.I + ldply(data.dco2,function( x ) match( max( x ),x ) )
   
   measures <- paste0( "Measurement",seq( 1:( length( infl$peaks ) - 1 ) ) )
@@ -277,7 +281,15 @@ if( !file.exists( OUTPUT_DIR ) ) {
 loadlibs( c( "plyr", "data.table" ) )
 
 printlog("Getting and cleaning data.")
-raw <- clean( read_csv("gga25Jun2014_f0001.txt" ) )
+raw <- data.table()
+data <- data.table()
+
+#for (fn in FILES){
+#  raw <- rbind(raw, clean( read_csv( fn ) ) )
+#  data <- rbind(data, get_cleaned_data_table( raw ))
+#}
+
+raw <- clean( read_csv( INPUT_FILE ) )
 data <- get_cleaned_data_table( raw )
 
 printlog("Running quality-control.")
@@ -291,9 +303,9 @@ setkey(qc_r2,measurement)
 
 qc <- merge(qc_r2, qc_p)
 
-setnames(qc,c("measurement", "V1.x",  "V2.x",  "V3.x",	"V1.y",	"V2.y",	"V3.y"),c("measurement","CO2_r2","CH4_r2","H2O_r2","CO2_p","CH4_p","H2O_p"))
+setnames(qc,c("measurement", "V1.x",  "V2.x",  "V3.x",	"V1.y",	"V2.y",	"V3.y"),c("Measurement","CO2_r2","CH4_r2","H2O_r2","CO2_p","CH4_p","H2O_p"))
 
-fluxes <- ddply(data, .(measurement), .fun=compute_flux)
+fluxes <- ddply(data, .(measurement, Filename), .fun=compute_flux)
 alldata <- as.data.table(merge(fluxes, qc))
 setkey(alldata,measurement)
 

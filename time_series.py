@@ -9,7 +9,7 @@ import datetime
 
 SCRIPT_NAME = "LGR_fluxes.R"
 
-def run(filename, graph=False):
+def run(foldername, graph=False):
 	""" Execute SCRIPT_NAME with time series parameters.
 
 	Arguments:
@@ -24,11 +24,11 @@ def run(filename, graph=False):
 
 
 def main():
-	usage = "usage: ./%s filename [options]" % os.path.basename(sys.argv[0])
+	usage = "usage: ./%s foldername [options]" % os.path.basename(sys.argv[0])
 	parser = optparse.OptionParser(usage = usage)
 
 	parser.add_option('-g','--graph',action="store_true",
-		dest="graph",help="output graphs.")
+		dest="graph",help="output graphs.",default=False)
 	parser.add_option('-v','--verbose',action="store_true",
 		dest="verbose",help="print file name.")
 
