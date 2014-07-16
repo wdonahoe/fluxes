@@ -2,42 +2,33 @@
 
 # William Donahoe, 2014
 
-# TODO:
-# get data from multiple lgr files
-#   1) Get list of all files in folder.
-#   2) Get all measurement files, sorted in order of LGR files.
-#   3) rbind data from all files into a single datatable w/ filenames.
-
-
 args = commandArgs( trailingOnly = TRUE )
 
 INPUT_DIR <- args[ 1 ]
 GRAPH <- args[ 2 ]
-#INPUT_DIR <- "data"
-#GRAPH <- F
 SCRIPTNAME <- "LGR_fluxes.R"
 OUTPUT_DIR <- "out"
 
 LINE_R <- 0.1 # cm
 SLINE1_L <- 99 # cm
 SLINE2_L <- 109 # cm
-SLINE1_V <- pi * (LINE_R ^ 2) * SLINE1_L # cm3
-SLINE2_V <- pi * (LINE_R ^ 2) * SLINE2_L # cm3
+SLINE1_V <- pi * ( LINE_R ^ 2 ) * SLINE1_L # cm3
+SLINE2_V <- pi * ( LINE_R ^ 2 ) * SLINE2_L # cm3
 
 LLINE1_L <- 162 # cm
 LLINE2_L <- 174 # cm
-LLINE1_V <- pi * (LINE_R ^ 2) * LLINE1_L # cm3
-LLINE2_V <- pi * (LINE_R ^ 2) * LLINE2_L # cm3
+LLINE1_V <- pi * ( LINE_R ^ 2 ) * LLINE1_L # cm3
+LLINE2_V <- pi * ( LINE_R ^ 2 ) * LLINE2_L # cm3
 
 SLINE_V <- SLINE1_V + SLINE2_V # cm3
 
 LC_DIAM <- 17 #cm
-LC_HEIGHT <- 7.4 + (7.4 * 0.05) #cm
-LC_V <- pi * LC_HEIGHT * (LC_DIAM / 2) ^ 2 # cm3
+LC_HEIGHT <- 7.4 + ( 7.4 * 0.05 ) #cm
+LC_V <- pi * LC_HEIGHT * ( LC_DIAM / 2 ) ^ 2 # cm3
 
 SC_DIAM <- 11 #cm
 SC_HEIGHT <- 11.2 #cm
-SC_V <- pi * SC_HEIGHT * (SC_DIAM / 2) ^ 2 #cm3
+SC_V <- pi * SC_HEIGHT * ( SC_DIAM / 2 ) ^ 2 #cm3
 
 LGR_V <- 401 # sccm
 
@@ -45,22 +36,25 @@ FORMAT <- "%m/%d/%Y %H:%M:%OS"
 
 # -----------------------------------------------------------------------------
 # get_file_table
+# Table with name of .csv data file and
+# corresponding measurement file.
+# 
 get_file_table <- function(){
-  files <- unlist(list.files(path=INPUT_DIR,pattern="*.csv"))
-  measurements <- lapply(files, function(x)paste0(head(unlist(strsplit(x,"*.csv"))),"_measurements.txt"))
+  files <- unlist( list.files( path=INPUT_DIR,pattern="*.csv" ) )
+  measurements <- lapply( files, function(x)paste0( head( unlist( strsplit( x,"*.csv" ) ) ),"_measurements.txt") )
   
-  ordering <- order(files)
+  ordering <- order( files )
   
-  measurements <- unlist(measurements[ordering])
+  measurements <- unlist( measurements[ ordering ] )
   
-  files <- paste0(INPUT_DIR,"/",files)
-  measurements <- paste0(INPUT_DIR,"/",measurements)
+  files <- paste0( INPUT_DIR,"/",files )
+  measurements <- paste0( INPUT_DIR,"/",measurements )
   
-  file_measure <- data.frame(files,measurements)
+  file_measure <- data.frame( files,measurements )
   
-  names(file_measure) <- c("Filename","Measurement")
+  names( file_measure ) <- c( "Filename","Measurement" )
   
-  stopifnot(length(file_measure$Filename) == length(file_measure$Measurement))
+  stopifnot( length( file_measure$Filename ) == length( file_measure$Measurement ) )
   
   return( file_measure )
 } # get_file_table
@@ -117,20 +111,25 @@ read_csv <- function( fn ){
 #                extension -- file extension. Default = .csv
 savedata <- function( d, extension=".csv" ) {
   stopifnot( file.exists( OUTPUT_DIR ) )
-  fn <- paste0( OUTPUT_DIR, "/", format(Sys.time(),"%d%B%Y"),"_fluxes",extension)
+  fn <- paste0( OUTPUT_DIR, "/", format( Sys.time(),"%d%B%Y" ),"_fluxes",extension )
   printlog( "Saving", fn )
   write.csv( d, fn, row.names=FALSE )
 } # savedata
 
-plots <- function( raw, cleaned){
-  loadlibs(c("xts"))
+# ------------------------------------------------------------
+# plots
+# Plot and save time-series for CO2, CH4, and H2O. Requires 'xts.'
+#     Arguments: raw  -- A data frame with all gas data, not only those within an experiment.
+#
+plots <- function( raw ){
+  loadlibs( c( "xts" ) )
   
-  raw.xts <- as.xts(raw, order.by=as.POSIXct(raw$Time,format=FORMAT))
-  names <- c("H2O","CH4","CO2")
-  pdf(file=paste0(OUTPUT_DIR,"/Time_Series_plots.pdf"))
-  par(cex=.7, las=1, bg="#E0FFFF")
-  for (i in seq(4,2)){
-    plot(raw.xts[,i,with=FALSE],major.format=F,minor.ticks=FALSE,main=names[i-1],xlab=NA,ylab=NA)
+  raw.xts <- as.xts( raw, order.by=as.POSIXct( raw$Time,format=FORMAT ) )
+  names <- c( "H2O","CH4","CO2" )
+  pdf( file=paste0( OUTPUT_DIR,"/Time_Series_plots.pdf" ) )
+  par( cex=.7, las=1, bg="#E0FFFF" )
+  for ( i in seq( 4,2 ) ){
+    plot( raw.xts[ ,i,with=FALSE ],major.format=F,minor.ticks=FALSE,main=names[ i-1 ],xlab=NA,ylab=NA )
   }
   graphics.off()
 }
@@ -168,7 +167,7 @@ r2 <- function( d ) {
 #     Returns:     -- A vector containing p-values for CO2, CH4, and H2O.
 #
 p_vals <- function( d ){
-  return( c(t.test(d$CO2)$p.value,t.test(d$CH4)$p.value,t.test(d$H2O)$p.value))
+  return( c( t.test( d$CO2 )$p.value,t.test( d$CH4 )$p.value,t.test( d$H2O )$p.value ) )
 }
 
 #------------------------------------------------------------------
@@ -178,19 +177,19 @@ p_vals <- function( d ){
 #                pos -- A list of indices.
 #     Returns:       -- A list of vectors split by pos.   
 #
-split_at <- function(x, pos) unname(split(x, cumsum(seq_along(x) %in% pos)))
+split_at <- function( x, pos ) unname( split( x, cumsum( seq_along( x ) %in% pos ) ) )
 
 clean <- function( d ){
   # keep the data we need.
-  d <- d[,colnames(d)%in%c("Time","X.CO2.d_ppm","X.CH4.d_ppm","X.H2O._ppm","AmbT_C","filename")]
-  names(d) <- c("Time","H2O","CH4","CO2","T","Filename")
+  d <- d[ ,colnames( d )%in%c( "Time","X.CO2.d_ppm","X.CH4.d_ppm","X.H2O._ppm","AmbT_C","filename" ) ]
+  names( d ) <- c( "Time","H2O","CH4","CO2","T","Filename" )
   
   data <- data.table( d )
-  setkey(data,Time)
-  data$Time <- as.POSIXct(data$Time,format=FORMAT)
+  setkey( data,Time )
+  data$Time <- as.POSIXct( data$Time,format=FORMAT )
   
   # cleanup garbage rows.
-  data <- data[!is.na(Time)]
+  data <- data[ !is.na( Time ) ]
   
   return( data )
 }
@@ -206,17 +205,17 @@ get_cleaned_data_table <- function( d, ft ) {
   
   data.time <- d$Time
   
-  measurements <- read.table(as.character(ft[match(d$Filename[1],ft$Filename),"Measurement"]),sep="\t",header=TRUE)
-  measurements <- sapply(measurements,as.POSIXct,format=FORMAT)[,1]
+  measurements <- read.table( as.character( ft[ match( d$Filename[ 1 ],ft$Filename ),"Measurement" ] ),sep="\t",header=TRUE )
+  measurements <- sapply( measurements,as.POSIXct,format=FORMAT )[ ,1 ]
   
   # find the nearest timestamp in data for each time stamp in measurements.
   infl <- data.table( data.time,val=data.time )
   setattr( infl,"sorted","data.time" )
-  infl <- infl[J(measurements),.I,roll="nearest"]
+  infl <- infl[ J(measurements),.I,roll="nearest" ]
   
   # get co2 for each experiment, find peak values.
-  data.dco2 <- split_at(d$H2O, infl$.I)[-1]
-  infl$peaks <- infl$.I + ldply(data.dco2,function( x ) match( max( x ),x ) )
+  data.dco2 <- split_at( d$H2O, infl$.I )[ -1 ]
+  infl$peaks <- infl$.I + ldply( data.dco2,function( x ) match( max( x ),x ) )
   
   measures <- paste0( "Measurement",seq( 1:( length( infl$peaks ) - 1 ) ) )
   clean <- list()
@@ -225,7 +224,7 @@ get_cleaned_data_table <- function( d, ft ) {
   }
   
   meas <- list()
-  for (i in 1:length(clean)){
+  for ( i in 1:length( clean ) ){
     meas[[i]] <- replicate( length( clean[[i]] ),measures[i] )
   }
   
@@ -244,7 +243,7 @@ get_cleaned_data_table <- function( d, ft ) {
 #     Arguments: d -- data frame containing data from one measurement.
 #     Returns:     -- all times minus start time.
 #
-correct_time <- function( d ){d$Time - d$Time[1]}
+correct_time <- function( d ){ d$Time - d$Time[ 1 ] }
 
 #---------------------------------------------------------
 # compute_flux
@@ -254,16 +253,16 @@ correct_time <- function( d ){d$Time - d$Time[1]}
 #
 compute_flux <- function( d ) {
 
-  time <- correct_time(d)
-  start_time <- as.POSIXct(d$Time[1],format=FORMAT)
+  time <- correct_time( d )
+  start_time <- as.POSIXct( d$Time[1],format=FORMAT )
   
   mco2 <- lm( as.numeric(d$CO2) ~ as.numeric(time))
   mch4 <- lm( as.numeric(d$CH4) ~ as.numeric(time))
   mh2o <- lm( as.numeric(d$H2O) ~ as.numeric(time))
   
-  Resp_raw_co2 <- as.numeric( coef( mco2 )[2] )  # i.e. the co2 slope.
-  Resp_raw_ch4 <- as.numeric( coef( mch4 )[2] )  # i.e. the ch4 slope.
-  Resp_raw_h2o <- as.numeric( coef( mh2o )[2] )  # i.e. the h20 slope.
+  Resp_raw_co2 <- as.numeric( coef( mco2 )[ 2 ] )  # i.e. the co2 slope.
+  Resp_raw_ch4 <- as.numeric( coef( mch4 )[ 2 ] )  # i.e. the ch4 slope.
+  Resp_raw_h2o <- as.numeric( coef( mh2o )[ 2 ] )  # i.e. the h20 slope.
   
   # We want to convert raw respiration (d[CO2]/dt) to a flux using
   # A = dC/dt * V/S * Pa/RT (e.g. Steduto et al. 2002), where
@@ -277,24 +276,24 @@ compute_flux <- function( d ) {
   # R is universal gas constant (8.3 x 10-3 m-3 kPa mol-1 K-1)
   # T is air temperature (K) 
   
-  V <- (SLINE_V + SC_V + LGR_V) * 1.0e-6 # m3
-  S <- pi * (SC_DIAM / 2) ^ 2
+  V <- ( SLINE_V + SC_V + LGR_V ) * 1.0e-6 # m3
+  S <- pi * ( SC_DIAM / 2 ) ^ 2
   
   R       <- 8.3145e-3                            # m-3 kPa mol-1 K-1
   Kelvin    <- 273.15                             # C to K conversion
   avg_temp  <- mean( d$T )
 
   # Convert from umol/g soil/s to mgC/kg soil/day
-  R_ewd_CO2 <- Resp_raw_co2 * (V / S) * R * ( Kelvin / (Kelvin + avg_temp ) )
-  R_ewd_CH4 <- Resp_raw_ch4 * (V / S) * R * ( Kelvin / (Kelvin + avg_temp ) )
-  R_ewd_H2O <- Resp_raw_h2o * (V / S) * R * ( Kelvin / (Kelvin + avg_temp ) )
+  R_ewd_CO2 <- Resp_raw_co2 * ( V / S ) * R * ( Kelvin / ( Kelvin + avg_temp ) )
+  R_ewd_CH4 <- Resp_raw_ch4 * ( V / S ) * R * ( Kelvin / ( Kelvin + avg_temp ) )
+  R_ewd_H2O <- Resp_raw_h2o * ( V / S ) * R * ( Kelvin / ( Kelvin + avg_temp ) )
   
   flux_co2 <- R_ewd_CO2 / 1e6 * 12 * ( 1000 ^ 2) * ( 60 ^ 2 ) * 24
   flux_ch4 <- R_ewd_CH4 / 1e6 * 12 * ( 1000 ^ 2) * ( 60 ^ 2 ) * 24
   flux_h2o <- R_ewd_H2O / 1e6 * 12 * ( 1000 ^ 2) * ( 60 ^ 2 ) * 24
 
-  ret <- c(flux_co2, flux_ch4, flux_h2o, (avg_temp + Kelvin))
-  names(ret) <- c("flux_co2", "flux_ch4", "flux_h2o", "Avg_Temp")
+  ret <- c( flux_co2, flux_ch4, flux_h2o, ( avg_temp + Kelvin ) )
+  names( ret ) <- c( "flux_co2", "flux_ch4", "flux_h2o", "Avg_Temp" )
   return( ret )
 } # compute_flux
 
@@ -307,48 +306,48 @@ if( !file.exists( OUTPUT_DIR ) ) {
 
 loadlibs( c( "plyr", "data.table" ) )
 
-printlog("Getting and cleaning data.")
+printlog( "Getting and cleaning data." )
 raw <- data.table()
 data <- data.table()
 
 files <- get_file_table()
 
-for (fn in files$Filename){
-  raw <- rbind(raw,clean( read_csv(fn)))
+for ( fn in files$Filename ){
+  raw <- rbind( raw,clean( read_csv( fn ) ) )
 }
 
-data <- raw[, get_cleaned_data_table(.SD,files),by=Filename,.SDcols=colnames(raw)]
+data <- raw[ , get_cleaned_data_table( .SD,files ),by=Filename,.SDcols=colnames( raw ) ]
 
-printlog("Running quality-control.")
+printlog( "Running quality-control." )
 qc_r2 <- data.table()
 qc_p <- data.table()
 
-qc_r2 <- as.data.table(ddply(data,.(Filename,Measurement),.fun=r2))
-qc_p <- as.data.table(ddply(data,.(Filename,Measurement),.fun=p_vals))
+qc_r2 <- as.data.table( ddply( data,.( Filename,Measurement ),.fun=r2 ) )
+qc_p <- as.data.table( ddply( data,.( Filename,Measurement ),.fun=p_vals ) )
 
-setkey(qc_r2,Filename)
-setkey(qc_p,Filename)
+setkey( qc_r2,Filename )
+setkey( qc_p,Filename )
 
-qc <- merge(qc_r2, qc_p,by=c("Filename","Measurement"))
+qc <- merge( qc_r2, qc_p,by=c( "Filename","Measurement" ) )
 
-setnames(qc,c("Measurement", "V1.x",  "V2.x",
-              "V3.x",	"V1.y",	"V2.y",	"V3.y"),
-            c("Measurement","CO2_r2","CH4_r2",
-              "H2O_r2","CO2_p","CH4_p","H2O_p"))
+setnames( qc,c( "Measurement", "V1.x",  "V2.x",
+              "V3.x",	"V1.y",	"V2.y",	"V3.y" ),
+            c( "Measurement","CO2_r2","CH4_r2",
+              "H2O_r2","CO2_p","CH4_p","H2O_p" ) )
 
-fluxes <- ddply(data, .(Measurement, Filename), .fun=compute_flux)
-alldata <- as.data.table(merge(fluxes, qc,by=c("Filename","Measurement")))
-setkey(alldata,Filename)
+fluxes <- ddply( data, .( Measurement, Filename ), .fun=compute_flux )
+alldata <- as.data.table( merge( fluxes, qc,by=c( "Filename","Measurement" ) ) )
+setkey( alldata,Filename )
 
 # sort alldata table by measurement number.
-alldata <- alldata[order(Filename,sapply(Measurement,function(x){
-  as.numeric(unlist(strsplit(x,"[:digit:]"))[2])
-  }))]
+alldata <- alldata[ order( Filename,sapply( Measurement,function( x ){
+  as.numeric( unlist( strsplit( x,"[:digit:]" ) )[2] )
+  } ) ) ]
 
 savedata( alldata )
 
-if (GRAPH){
-  plots(raw, data)
+if ( GRAPH ){
+  plots( raw, data )
 }
 
 printlog( "All done with", SCRIPTNAME )
