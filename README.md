@@ -1,4 +1,4 @@
-fluxes.py
+LGR_fluxes.py
 ==========
 
 Author: William Donahoe, wdonahoe@udel.edu
@@ -7,7 +7,7 @@ Description: This is a small python package that calculates the CO2, CH4, and H2
 
 Unpack
 ==========
-To first use fluxes.py, unpack fluxes.tar.gz.
+To first use LGR_fluxes.py, unpack fluxes.tar.gz.
 
 On linux,
 
@@ -17,22 +17,22 @@ $ tar -zxvf fluxes.tar.gz
 
 OR
 
-2) Double click on the "fluxes.tar.gz" icon and click "Extract."
+2) Double click on the "LGR_fluxes.tar.gz" icon and click "Extract."
 
-This will extract fluxes.py, R_fluxes.R and README.md into a folder "fluxes."
+This will extract LGR_fluxes.py, LGR_fluxes.R and README.md into a folder "LGR_fluxes."
 
 ---------
 On Mac OSX:
 
 1) cd to the folder containing fluxes.tar.gz on the terminal and type:
 
-$ tar -zxvf fluxes.tar.gz
+$ tar -zxvf LGR_fluxes.tar.gz
 
 OR
 
-2) Double click on the "fluxes.tar.gz" icon
+2) Double click on the "LGR_fluxes.tar.gz" icon
 
-This will extract fluxes.pt, R_fluxes.R and README.md into a folder "fluxes."
+This will extract fluxes.pt, LGR__fluxes.R and README.md into a folder "LGR_fluxes."
 
 --------
 On Windows:
@@ -43,23 +43,38 @@ For more on extracting tar files on Windows see http://www.haskell.org/haskellwi
 
 Usage
 =========
-To use fluxes.py, navigate to the folder via terminal or command line containing fluxes.py, LGR_fluxes.R and your data.
+To use LGR_fluxes.py, navigate to the folder via terminal or command line containing LGR_fluxes.py, LGR_fluxes.R and your data.
 
 To see a usage doc, type
 
-$ ./fluxes.py --help OR $./fluxes.py -h
+$ ./LGR_fluxes.py --help OR $./LGR_fluxes.py -h
 
 on Windows:
 
-\> fluxes.py --help OR > fluxes.py -h
+\> LGR_fluxes.py --help OR > LGR_fluxes.py -h
 
 Here is the output:
 
-	Usage: ./fluxes.py filename [options]
+	Usage: ./LGR_fluxes.py foldername [options]
 
 	Options:
-  		-h, --help     show this help message and exit
-  		-g, --graph    output graphs.
+  		-h, --help            show this help message and exit
+  		-s START, --start=START start date formatted '%d/%M/%Y'
+  		-e END, --end=END     end date formatted '%d/%M/%Y'
+  		-g, --graph           output graphs.
+  		-v, --verbose         print file name.
+
+Some examples of usage may be the following:
+
+$ ./LGR_fluxes.py data --start=06/22/2013 --end==06/25/2013 -g
+
+$ ./LGR_fluxes.py data -s 06/22/2013 -e 06/25/2013 --graph=False
+
+You don't need to supply start and end dates if you want all files:
+
+$ ./LGR_fluxes.py data
+
+$ ./LGR_fluxes.py data -g
 
 -------
 NOTE: A requirement for this script to run is a .csv file containing the POSIX time of for each measurement of the form (lga_filename)_measurements.txt.
@@ -67,6 +82,7 @@ NOTE: A requirement for this script to run is a .csv file containing the POSIX t
 EX:
 
 Time
+
 06/25/2014 08:06:14.000
 
 06/25/2014 08:11:12.000
@@ -76,34 +92,6 @@ Time
 06/25/2014 08:19:24.000
 
 06/25/2014 08:23:10.000
-
-06/25/2014 08:27:07.000
-
-06/25/2014 08:31:13.000
-
-06/25/2014 08:35:15.000
-
-06/25/2014 08:40:04.000
-
-06/25/2014 08:44:08.000
-
-06/25/2014 08:48:11.000
-
-06/25/2014 08:52:40.000
-
-06/25/2014 08:56:52.000
-
-06/25/2014 09:01:01.000
-
-06/25/2014 09:20:50.000
-
-06/25/2014 09:25:50.000
-
-06/25/2014 09:30:20.000
-
-06/25/2014 09:34:18.000
-
-06/25/2014 09:39:07.000
 
 =========
 

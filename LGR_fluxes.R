@@ -4,8 +4,10 @@
 
 args = commandArgs( trailingOnly = TRUE )
 
-INPUT_DIR <- args[ 1 ]
-GRAPH <- args[ 2 ]
+END <- args[ 1 ]
+INPUT_DIR <- args[ 2 ]
+GRAPH <- args[ 3 ]
+START <- args[ 4 ]
 SCRIPTNAME <- "LGR_fluxes.R"
 OUTPUT_DIR <- "out"
 
@@ -32,7 +34,8 @@ SC_V <- pi * SC_HEIGHT * ( SC_DIAM / 2 ) ^ 2 #cm3
 
 LGR_V <- 401 # sccm
 
-FORMAT <- "%m/%d/%Y %H:%M:%OS"
+FORMATS <- "%d/%M/%Y"
+FORMATL <- "%m/%d/%Y %H:%M:%OS"
 
 # -----------------------------------------------------------------------------
 # get_file_table
@@ -41,6 +44,9 @@ FORMAT <- "%m/%d/%Y %H:%M:%OS"
 # 
 get_file_table <- function(){
   files <- unlist( list.files( path=INPUT_DIR,pattern="*.csv" ) )
+  range <- time_limit( files )
+  files <- files[range]
+
   measurements <- lapply( files, function(x)paste0( head( unlist( strsplit( x,"*.csv" ) ) ),"_measurements.txt") )
   
   ordering <- order( files )
@@ -58,6 +64,23 @@ get_file_table <- function(){
   
   return( file_measure )
 } # get_file_table
+
+time_limit <- function( files ){
+  start_posix <- as.POSIXct(START, format=FORMATS)
+  end_posix <- as.POSIXct(END, format=FORMATS)
+
+  stripped <- sapply(files, strsplit, split="_", fixed=TRUE)
+  files <- list()
+  for (i in seq(1:length(stripped))){
+    add <- unlist(stripped[[i]])[1]
+    add <- substring(add,4)
+    files <- c(files,add)
+  }
+  range <- unlist(lapply(files,as.POSIXct,format="%d%b%Y"))
+  to_include <- (range >= start_posix & range <= end_posix)
+
+  return(to_include)
+}
 
 # -----------------------------------------------------------------------------
 # printlog
@@ -124,7 +147,7 @@ savedata <- function( d, extension=".csv" ) {
 plots <- function( raw ){
   loadlibs( c( "xts" ) )
   
-  raw.xts <- as.xts( raw, order.by=as.POSIXct( raw$Time,format=FORMAT ) )
+  raw.xts <- as.xts( raw, order.by=as.POSIXct( raw$Time,format=FORMATL ) )
   names <- c( "H2O","CH4","CO2" )
   pdf( file=paste0( OUTPUT_DIR,"/Time_Series_plots.pdf" ) )
   par( cex=.7, las=1, bg="#E0FFFF" )
@@ -186,7 +209,7 @@ clean <- function( d ){
   
   data <- data.table( d )
   setkey( data,Time )
-  data$Time <- as.POSIXct( data$Time,format=FORMAT )
+  data$Time <- as.POSIXct( data$Time,format=FORMATL )
   
   # cleanup garbage rows.
   data <- data[ !is.na( Time ) ]
@@ -206,7 +229,7 @@ get_cleaned_data_table <- function( d, ft ) {
   data.time <- d$Time
   
   measurements <- read.table( as.character( ft[ match( d$Filename[ 1 ],ft$Filename ),"Measurement" ] ),sep="\t",header=TRUE )
-  measurements <- sapply( measurements,as.POSIXct,format=FORMAT )[ ,1 ]
+  measurements <- sapply( measurements,as.POSIXct,format=FORMATL )[ ,1 ]
   
   # find the nearest timestamp in data for each time stamp in measurements.
   infl <- data.table( data.time,val=data.time )
@@ -254,7 +277,7 @@ correct_time <- function( d ){ d$Time - d$Time[ 1 ] }
 compute_flux <- function( d ) {
 
   time <- correct_time( d )
-  start_time <- as.POSIXct( d$Time[1],format=FORMAT )
+  start_time <- as.POSIXct( d$Time[1],format=FORMATL )
   
   mco2 <- lm( as.numeric(d$CO2) ~ as.numeric(time))
   mch4 <- lm( as.numeric(d$CH4) ~ as.numeric(time))
