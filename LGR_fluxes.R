@@ -47,6 +47,8 @@ get_file_table <- function(){
   range <- time_limit( files )
   files <- files[range]
 
+  print(range)
+
   measurements <- lapply( files, function(x)paste0( head( unlist( strsplit( x,"*.csv" ) ) ),"_measurements.txt") ) 
   measurements <- unlist( measurements[ order( files ) ] )
   
@@ -91,6 +93,8 @@ printlog <- function( msg="", ..., ts=TRUE, cr=TRUE ) {
   cat( msg, ... )
   if( cr ) cat( "\n")
 } # printlog
+
+my_list <- function( l ){ vector("list",l) }
 
 # -----------------------------------------------------------------------------
 # loadlibs
@@ -245,7 +249,7 @@ get_cleaned_data_table <- function( d, ft ) {
   
   # pre-allocate list because it is long.
   l <- length(clean)
-  meas <- vector("list",l)
+  meas <- my_list(l)
   for ( i in 1:l ){
     meas[[i]] <- replicate( length( clean[[i]] ),measures[i] )
   }
