@@ -47,11 +47,8 @@ get_file_table <- function(){
   range <- time_limit( files )
   files <- files[range]
 
-  measurements <- lapply( files, function(x)paste0( head( unlist( strsplit( x,"*.csv" ) ) ),"_measurements.txt") )
-  
-  ordering <- order( files )
-  
-  measurements <- unlist( measurements[ ordering ] )
+  measurements <- lapply( files, function(x)paste0( head( unlist( strsplit( x,"*.csv" ) ) ),"_measurements.txt") ) 
+  measurements <- unlist( measurements[ order( files ) ] )
   
   files <- paste0( INPUT_DIR,"/",files )
   measurements <- paste0( INPUT_DIR,"/",measurements )
