@@ -243,8 +243,10 @@ get_cleaned_data_table <- function( d, ft ) {
     clean[[i]] <- seq( infl$.I[i],infl$peaks[i] )
   }
   
-  meas <- list()
-  for ( i in 1:length( clean ) ){
+  # pre-allocate list because it is long.
+  l <- length(clean)
+  meas <- vector("list",l)
+  for ( i in 1:l ){
     meas[[i]] <- replicate( length( clean[[i]] ),measures[i] )
   }
   
