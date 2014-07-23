@@ -1,7 +1,0 @@
-venv/
-data/
-out/
-.RData
-.Rhistorybuild/
-dist/
-UNKNOWN.egg-info/

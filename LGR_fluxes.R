@@ -11,6 +11,7 @@ MIN_R2 <- args[ 4 ]
 START <- args[ 5 ]
 SCRIPTNAME <- "LGR_fluxes.R"
 OUTPUT_DIR <- "out"
+MAX_P <- 0.05
 
 LINE_R <- 0.1 # cm
 SLINE1_L <- 99 # cm
@@ -69,6 +70,7 @@ time_limit <- function( files ){
   end_posix <- as.POSIXct(END, format=FORMATS)
 
   stripped <- sapply(files, strsplit, split="_", fixed=TRUE)
+  print(stripped)
   files <- list()
   for (i in seq(1:length(stripped))){
     add <- unlist(stripped[[i]])[1]
@@ -241,7 +243,8 @@ get_cleaned_data_table <- function( d, ft ) {
   
   # get co2 for each experiment, find peak values.
   data.dco2 <- split_at( d$H2O, infl$.I )[ -1 ]
-  infl$peaks <- infl$.I + ldply( data.dco2,function( x ) match( max( x ),x ) ) 
+  infl$peaks <- infl$.I + ldply( data.dco2,function( x ) match( max( x ),x ) )
+  
   
   measures <- paste0( "Measurement",seq( 1:( length( infl$peaks ) - 1 ) ) )
   clean <- list()
@@ -249,7 +252,7 @@ get_cleaned_data_table <- function( d, ft ) {
     clean[[i]] <- seq( infl$.I[i],infl$peaks[i] )
   }
   
-  # pre-allocate list because it is long.
+  # pre-allocate list because it is long
   l <- length(clean)
   meas <- my_list(l)
   for ( i in 1:l ){
@@ -259,7 +262,6 @@ get_cleaned_data_table <- function( d, ft ) {
   # remove data not in experiments.
   data.clean <- d[ unlist( clean ) ]
   data.clean$Measurement <- unlist( meas )
-  
   
   return ( data.clean )
   
@@ -322,25 +324,40 @@ compute_flux <- function( d ) {
   flux_H2O <- Resp_raw_h2o * ( V / S ) * Pa / ( R * avg_temp )
 
   ret <- c( flux_CO2, flux_CH4, flux_H2O, ( avg_temp - Kelvin ) )
-  names( ret ) <- c( "flux_co2", "flux_ch4", "flux_h2o", "Avg_Temp" )
+  names( ret ) <- c( "flux_co2 [umol m-2 sec-1]", "flux_ch4 [nmol m-2 sec-1]", "flux_h2o [umol m-2 sec-1]", "Avg_Temp [C]" )
   return( ret )
 } # compute_flux
 
-get_alldata <- function( d ){
+beyond_threshold <- function( qc ){
+  test_rp <- function( row ){
+    r2 <- all(as.double(row[3:5]) >= MIN_R2)
+    p <- all(as.double(row[6:8]) <= MAX_P)
+    return( r2 && p )
+  }
+  ret <- apply( qc,1,test_rp )
+  print(ret)
+  return( ret )
+}
+
+get_alldata <- function( d, qc ){
   fluxes <- ddply( d, .( Measurement, Filename ), .fun=compute_flux )
   alldata <- as.data.table( merge( fluxes, qc,by=c( "Filename","Measurement" ) ) )
   setkey( alldata,Filename )
 
   # sort alldata table by measurement number.
-  alldata <- alldata[ order( Filename,sapply( Measurement,function( x ){
+  alldata <- alldata[ order(Filename,sapply( Measurement,function( x ){
     as.numeric( unlist( strsplit( x,"[:digit:]" ) )[2] )
     } ) ) ]
+  
+  #alldata <- alldata[beyond_threshold( qc )]
 
 return( alldata )
 
 }
 
 #main---------------------------------------------
+
+stopifnot( file.exists( INPUT_DIR ) )
 
 if( !file.exists( OUTPUT_DIR ) ) {
   printlog( "Creating", OUTPUT_DIR )
@@ -371,7 +388,7 @@ setnames( qc,c( "Measurement", "V1",  "V2",
               "H2O_r2","CO2_p","CH4_p","H2O_p" ) )
 
 printlog( "Computing fluxes and combining data from all files." )
-alldata <- get_alldata( data )
+alldata <- get_alldata( data, qc )
 
 savedata( alldata )
 

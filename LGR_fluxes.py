@@ -29,7 +29,7 @@ def run(foldername, start, end, graph, r):
 
 def main():
 	plat = platform.system()
-	if plat is 'Windows':
+	if plat == 'Windows':
 		usage = "usage: %s foldername [options]" % os.path.basename(sys.argv[0])
 	else:
 		usage = "usage: ./%s foldername [options]" % os.path.basename(sys.argv[0])
@@ -43,7 +43,7 @@ def main():
 	parser.add_option('-g','--graph',action="store_true",
 	dest="graph",help="output graphs.",default=False)
 	parser.add_option('-r','--rsquared',type="float",action="store",
-		dest="r",help="specify minimum r-squared value.")
+		dest="r",help="specify minimum r-squared value.",default=0.8)
 	
 	(options, args) = parser.parse_args()
 	

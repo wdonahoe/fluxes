@@ -1,13 +1,13 @@
 LGR_fluxes.py
 ==========
 
-Author: William Donahoe, wdonahoe@udel.edu
+Author: William Donahoe, wdonahoe@udel.edu, 2014
 
-Description: This is a small python package that calculates the CO2, CH4, and H2O fluxes for a single LGR output file.
+Description: This is a small python executable that calculates the CO2, CH4, and H2O fluxes for a series of LGR output files on Linux and OSX.
 
 Unpack
 ==========
-To first use LGR_fluxes.py, unpack fluxes.tar.gz.
+To first use LGR_fluxes, unpack fluxes.tar.gz.
 
 On linux,
 
@@ -19,7 +19,7 @@ OR
 
 2) Double click on the "LGR_fluxes.tar.gz" icon and click "Extract."
 
-This will extract LGR_fluxes.py, LGR_fluxes.R and README.md into a folder "LGR_fluxes."
+This will extract LGR_fluxes, LGR_fluxes.R and README.md into a folder "LGR_fluxes."
 
 ---------
 On Mac OSX:
@@ -32,30 +32,22 @@ OR
 
 2) Double click on the "LGR_fluxes.tar.gz" icon
 
-This will extract fluxes.pt, LGR__fluxes.R and README.md into a folder "LGR_fluxes."
+This will extract LGR_fluxes, LGR__fluxes.R and README.md into a folder "LGR_fluxes."
 
---------
-On Windows:
-
-Use 7-zip (freeware), PowerArchiver (freeware), or Winzip (commercial) to extract fluxes.tar.gz.
-
-For more on extracting tar files on Windows see http://www.haskell.org/haskellwiki/How_to_unpack_a_tar_file_in_windows
 
 Usage
 =========
-To use LGR_fluxes.py, navigate to the folder via terminal or command line containing LGR_fluxes.py, LGR_fluxes.R and your data.
+To use LGR_fluxes, navigate to the folder via terminal or command line containing LGR_fluxes, LGR_fluxes.R. 
+
+NOTE: Your data folder must be in the same folder as you LGR_fluxes and LGR_fluxes.R in order to run.
 
 To see a usage doc, type
 
-$ ./LGR_fluxes.py --help OR $./LGR_fluxes.py -h
-
-on Windows:
-
-\> LGR_fluxes.py --help OR > LGR_fluxes.py -h
+$ ./LGR_fluxes --help OR $./LGR_fluxes -h
 
 Here is the output:
 
-	Usage: ./LGR_fluxes.py foldername [options]
+	Usage: ./LGR_fluxes foldername [options]
 
 	Options:
   		-h, --help            show this help message and exit
@@ -66,33 +58,28 @@ Here is the output:
 
 Some examples of usage may be the following:
 
-$ ./LGR_fluxes.py data --start=06/22/2013 --end==06/25/2013 -g
+$ ./LGR_fluxes data --start=06/22/2013 --end==06/25/2013 -g
 
-$ ./LGR_fluxes.py data -s 06/22/2013 -e 06/25/2013 --graph=False
+$ ./LGR_fluxes data -s 06/22/2013 -e 06/25/2013 --graph=False
 
 You don't need to supply start and end dates if you want all files:
 
-$ ./LGR_fluxes.py data
+$ ./LGR_fluxes data
 
-$ ./LGR_fluxes.py data -g
+$ ./LGR_fluxes data -g
 
 -------
-NOTE: A requirement for this script to run is a .csv file containing the POSIX time of for each measurement of the form (lga_filename)_measurements.txt.
+NOTE: A requirement for this script to run is a .csv file containing the POSIX time of for each measurement of the form (gga_filename)_measurements.txt.
 
 EX:
 
 Time
 
 06/25/2014 08:06:14.000
-
 06/25/2014 08:11:12.000
-
 06/25/2014 08:15:16.000
-
 06/25/2014 08:19:24.000
-
 06/25/2014 08:23:10.000
-
 =========
 
 
