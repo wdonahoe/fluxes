@@ -2,6 +2,8 @@
 
 # William Donahoe, 2014
 
+# TODO: Sort alldata by measurement.
+
 args = commandArgs( trailingOnly = TRUE )
 
 END <- args[ 1 ]
@@ -70,7 +72,6 @@ time_limit <- function( files ){
   end_posix <- as.POSIXct(END, format=FORMATS)
 
   stripped <- sapply(files, strsplit, split="_", fixed=TRUE)
-  print(stripped)
   files <- list()
   for (i in seq(1:length(stripped))){
     add <- unlist(stripped[[i]])[1]
@@ -328,6 +329,11 @@ compute_flux <- function( d ) {
   return( ret )
 } # compute_flux
 
+# -------------------------------------------------------
+# beyond_threshold
+# Determines if a measurement is up to r2 and p value standards. 
+#   Arguments:  qc -- Quality control data table.
+#  
 beyond_threshold <- function( qc ){
   test_rp <- function( row ){
     r2 <- all(as.double(row[3:5]) >= MIN_R2)
@@ -335,23 +341,30 @@ beyond_threshold <- function( qc ){
     return( r2 && p )
   }
   ret <- apply( qc,1,test_rp )
-  print(ret)
   return( ret )
 }
 
+# ------------------------------------------------
+# get_alldata
+# Compute fluxes and merge with qc table. 
+# Arguments:  d  -- Data from all files, cleaned.
+#             qc -- Quality control data for all measurements.
+#
 get_alldata <- function( d, qc ){
   fluxes <- ddply( d, .( Measurement, Filename ), .fun=compute_flux )
   alldata <- as.data.table( merge( fluxes, qc,by=c( "Filename","Measurement" ) ) )
-  setkey( alldata,Filename )
+
+  alldata <- alldata[beyond_threshold( qc )]
 
   # sort alldata table by measurement number.
-  alldata <- alldata[ order(Filename,sapply( Measurement,function( x ){
-    as.numeric( unlist( strsplit( x,"[:digit:]" ) )[2] )
-    } ) ) ]
-  
-  #alldata <- alldata[beyond_threshold( qc )]
+  alldata <- alldata[ order(-rank(Filename),
+    sapply( Measurement,
+      function( x ){
+        as.numeric( unlist( strsplit( x,"[:digit:]" ) )[2] )
+      }
+    ) ) ]
 
-return( alldata )
+  return( alldata )
 
 }
 
