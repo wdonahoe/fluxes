@@ -77,7 +77,7 @@ Proper Input
 =========
 LGR_fluxes looks in the user-supplied directory for .csv files of the following form:
 
-gga[DATE](...).csv
+gga(DATE)(...).csv
 
 A requirement for this script to run is a .csv for EACH INPUT FILE containing the POSIX time for each measurement of the form (gga_filename)_measurements.txt.
 
