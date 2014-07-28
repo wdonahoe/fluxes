@@ -15,6 +15,8 @@ SCRIPTNAME <- "LGR_fluxes.R"
 OUTPUT_DIR <- "out"
 MAX_P <- 0.05
 
+SEP <- ifelse(Sys.info()['sysname'] != "Windows","/","\\")
+
 LINE_R <- 0.1 # cm
 SLINE1_L <- 99 # cm
 SLINE2_L <- 109 # cm
@@ -48,15 +50,15 @@ FORMATL <- "%m/%d/%Y %H:%M:%OS"
 # 
 get_file_table <- function(){
   # match all 'gga[DATE](...).csv' files
-  files <- unlist( list.files( path=INPUT_DIR,pattern="^gga[0-9]{2}[A-Z][a-z]+[0-9].+\\.csv" ) )
+  files <- unlist( list.files( path=INPUT_DIR,pattern="^gga[0-9]{2}[A-Z][a-z]+[0-9]+_f\\d+.txt" ) )
+  measurements <- unlist ( list.files ( path=INPUT_DIR,pattern="^gga[0-9]{2}[A-Z][a-z]+[0-9].+_measurements\\.txt"))
   range <- time_limit( files )
   files <- files[range]
-
-  measurements <- lapply( files, function(x)paste0( head( unlist( strsplit( x,"*.csv" ) ) ),"_measurements.txt") ) 
+  
   measurements <- unlist( measurements[ order( files ) ] )
   
-  files <- paste0( INPUT_DIR,"/",files )
-  measurements <- paste0( INPUT_DIR,"/",measurements )
+  files <- paste0( INPUT_DIR,SEP,files )
+  measurements <- paste0( INPUT_DIR,SEP,measurements )
   
   file_measure <- data.frame( files,measurements )
   
@@ -70,7 +72,7 @@ get_file_table <- function(){
 time_limit <- function( files ){
   start_posix <- as.POSIXct(START, format=FORMATS)
   end_posix <- as.POSIXct(END, format=FORMATS)
-
+  
   stripped <- sapply(files, strsplit, split="_", fixed=TRUE)
   files <- list()
   for (i in seq(1:length(stripped))){
@@ -120,6 +122,10 @@ loadlibs <- function( liblist ) {
     print("Installing packages.")
     chooseCRANmirror(graphics=FALSE,ind=85) # Choose USA (MD)
     install.packages(not_installed)
+	for( lib in not_installed ) {
+		printlog( "Loading", lib )
+		loadedlibs[ lib ] <- require( lib, character.only=TRUE, warn.conflicts=FALSE )
+	}	
   }
   invisible( loadedlibs )
 } # loadlibs
@@ -146,7 +152,7 @@ read_csv <- function( fn ){
 #                extension -- file extension. Default = .csv
 savedata <- function( d, extension=".csv" ) {
   stopifnot( file.exists( OUTPUT_DIR ) )
-  fn <- paste0( OUTPUT_DIR, "/", format( Sys.time(),"%d%B%Y" ),"_fluxes",extension )
+  fn <- paste0( OUTPUT_DIR, SEP, format( Sys.time(),"%d%B%Y" ),"_fluxes",extension )
   printlog( "Saving", fn )
   write.csv( d, fn, row.names=FALSE )
 } # savedata
@@ -249,6 +255,7 @@ get_cleaned_data_table <- function( d, ft ) {
   infl <- data.table( data.time,val=data.time )
   setattr( infl,"sorted","data.time" )
   infl <- infl[ J(measurements),.I,roll="nearest" ]
+  #print(infl)
   
   # get co2 for each experiment, find peak values.
   data.dco2 <- split_at( d$H2O, infl$.I )[ -1 ]

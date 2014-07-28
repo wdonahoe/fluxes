@@ -8,6 +8,7 @@ import time
 import platform
 
 SCRIPT_NAME = "LGR_fluxes.R"
+platform = platform.system() != "Windows"
 
 def run(foldername, start, end, graph, r):
 	""" Execute SCRIPT_NAME with time series parameters.
@@ -20,16 +21,20 @@ def run(foldername, start, end, graph, r):
 	r -- minimum r-squared value.
 
 	"""
-
-	try:
-		subprocess.call(["./" + SCRIPT_NAME] + [str(v) for k, v in sorted(locals().items())])
-	except OSError as e:
-		print "OS error({0}): {1}".format(e.errno, e.strerror)
+	if platform:
+		try:
+			subprocess.call(["./" + SCRIPT_NAME] + [str(v) for k, v in sorted(locals().items())])
+		except OSError as e:
+			print "OS error({0}): {1}".format(e.errno, e.strerror)
+	else:
+		try:
+			subprocess.call(["Rscript"] + [SCRIPT_NAME] + [str(v) for k, v in sorted(locals().items())])
+		except OSError as e:
+			print "OS error({0}): {1}".format(e.errno, e.strerror)
 
 
 def main():
-	plat = platform.system()
-	if plat == 'Windows':
+	if not platform:
 		usage = "usage: %s foldername [options]" % os.path.basename(sys.argv[0])
 	else:
 		usage = "usage: ./%s foldername [options]" % os.path.basename(sys.argv[0])
