@@ -111,7 +111,8 @@ loadlibs <- function( liblist ) {
     printlog( "Loading", lib )
     loadedlibs[ lib ] <- require( lib, character.only=TRUE, warn.conflicts=FALSE )
     if( !loadedlibs[ lib ] )
-      warning( "this package is not installed!" )
+      warning( "this package is not installed! Installing." )
+      packages.install( lib, dependencies=TRUE, quiet=TRUE )
   }
   invisible( loadedlibs )
 } # loadlibs
