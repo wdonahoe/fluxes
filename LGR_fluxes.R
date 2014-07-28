@@ -107,12 +107,19 @@ my_list <- function( l ){ vector("list",l) }
 loadlibs <- function( liblist ) {
   printlog( "Loading libraries..." )
   loadedlibs <- vector()
+  not_installed <- vector()
   for( lib in liblist ) {
     printlog( "Loading", lib )
     loadedlibs[ lib ] <- require( lib, character.only=TRUE, warn.conflicts=FALSE )
-    if( !loadedlibs[ lib ] )
-      warning( "this package is not installed! Installing." )
-      install.packages( lib, dependencies=TRUE, quiet=TRUE )
+    if( !loadedlibs[ lib ] ){
+      warning( "this package is not installed!" )
+      not_installed <- c(not_installed,lib)
+    }
+  }
+  if ( length(not_installed) != 0){
+    print("Installing packages.")
+    chooseCRANmirror(graphics=FALSE,ind=85) # Choose USA (MD)
+    install.packages(not_installed)
   }
   invisible( loadedlibs )
 } # loadlibs
