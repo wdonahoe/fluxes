@@ -1,4 +1,5 @@
-LGR_fluxes
+LGR_fluxes 1.0
+=============================
 
 Author: William Donahoe, wdonahoe@udel.edu, 2014
 
@@ -7,12 +8,12 @@ Description: This is a small python executable that calculates the CO2, CH4, and
 Unpack
 ==============================
 
-To first use LGR_fluxes, unpack fluxes.tar.gz.
+To first use LGR_fluxes, unpack the compressed file.
 
 On linux or OSX,
 ------------------------------------
 
-*1) cd to the folder containing fluxes.tar.gz on the terminal and type:
+*1) cd to the folder containing LGR_fluxes-1.0.tar.gz on the terminal and type:
 
 $ tar -zxvf fluxes.tar.gz
 
@@ -20,12 +21,13 @@ OR
 
 2) Double click on the "LGR_fluxes.tar.gz" icon and click "Extract."
 
-This will extract LGR_fluxes, LGR_fluxes.R and README.md into a folder "LGR_fluxes."
+This will extract LGR_fluxes, LGR_fluxes.R, README.md, and LICENSE into a folder "LGR_fluxes-1.0."
 
-On Windows, download and use 7-zip (http://www.7-zip.org/) to unpack the .tar file.
+On Windows, 
 ------------------------------------
 
-For a basic introduction to using the terminal on Mac or Linux, read the following link: http://www.tldp.org/LDP/intro-linux/html/sect_02_02.html
+1) Double click "LGR_fluxes-1.0-win.zip" to extract.
+
 
 Usage
 =================================
