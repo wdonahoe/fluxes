@@ -2,8 +2,6 @@
 
 # William Donahoe, 2014
 
-# TODO: Sort alldata by measurement.
-
 args = commandArgs( trailingOnly = TRUE )
 
 END <- args[ 1 ]
@@ -14,6 +12,8 @@ START <- args[ 5 ]
 SCRIPTNAME <- "LGR_fluxes.R"
 OUTPUT_DIR <- "out"
 MAX_P <- 0.05
+
+SEP <- ifelse(Sys.info()['sysname'] != "Windows","/","\\")
 
 LINE_R <- 0.1 # cm
 SLINE1_L <- 99 # cm
@@ -45,18 +45,18 @@ FORMATL <- "%m/%d/%Y %H:%M:%OS"
 # get_file_table
 # Table with name of .csv data file and
 # corresponding measurement file.
-# 
+#
 get_file_table <- function(){
   # match all 'gga[DATE](...).csv' files
-  files <- unlist( list.files( path=INPUT_DIR,pattern="^gga[0-9]{2}[A-Z][a-z]+[0-9].+\\.csv" ) )
+  files <- unlist( list.files( path=INPUT_DIR,pattern="^gga[0-9]{2}[A-Z][a-z]+[0-9]+_f\\d+.txt" ) )
+  measurements <- unlist ( list.files ( path=INPUT_DIR,pattern="^gga[0-9]{2}[A-Z][a-z]+[0-9].+_measurements\\.txt"))
   range <- time_limit( files )
   files <- files[range]
-
-  measurements <- lapply( files, function(x)paste0( head( unlist( strsplit( x,"*.csv" ) ) ),"_measurements.txt") ) 
+  
   measurements <- unlist( measurements[ order( files ) ] )
   
-  files <- paste0( INPUT_DIR,"/",files )
-  measurements <- paste0( INPUT_DIR,"/",measurements )
+  files <- paste0( INPUT_DIR,SEP,files )
+  measurements <- paste0( INPUT_DIR,SEP,measurements )
   
   file_measure <- data.frame( files,measurements )
   
@@ -70,7 +70,7 @@ get_file_table <- function(){
 time_limit <- function( files ){
   start_posix <- as.POSIXct(START, format=FORMATS)
   end_posix <- as.POSIXct(END, format=FORMATS)
-
+  
   stripped <- sapply(files, strsplit, split="_", fixed=TRUE)
   files <- list()
   for (i in seq(1:length(stripped))){
@@ -87,9 +87,9 @@ time_limit <- function( files ){
 # -----------------------------------------------------------------------------
 # printlog
 # Time-stamped output function
-#     Arguments: msg -- A string to print
-#                ts  -- Time stamp? Default = TRUE
-#                cr  -- New line? Default = TRUE
+# Arguments: msg -- A string to print
+# ts -- Time stamp? Default = TRUE
+# cr -- New line? Default = TRUE
 #
 printlog <- function( msg="", ..., ts=TRUE, cr=TRUE ) {
   if( ts ) cat( date(), " " )
@@ -102,8 +102,8 @@ my_list <- function( l ){ vector("list",l) }
 # -----------------------------------------------------------------------------
 # loadlibs
 # Load a list of libraries
-#     Arguments: liblist -- A character vector of library names.
-# 
+# Arguments: liblist -- A character vector of library names.
+#
 loadlibs <- function( liblist ) {
   printlog( "Loading libraries..." )
   loadedlibs <- vector()
@@ -120,6 +120,10 @@ loadlibs <- function( liblist ) {
     print("Installing packages.")
     chooseCRANmirror(graphics=FALSE,ind=85) # Choose USA (MD)
     install.packages(not_installed)
+for( lib in not_installed ) {
+printlog( "Loading", lib )
+loadedlibs[ lib ] <- require( lib, character.only=TRUE, warn.conflicts=FALSE )
+}	
   }
   invisible( loadedlibs )
 } # loadlibs
@@ -127,8 +131,8 @@ loadlibs <- function( liblist ) {
 # ----------------------------------------------------------
 # read_csv
 # Reads a .csv file w/ header and skipping first line.
-#     Arguments: fn    -- A filename (.csv).
-#     Returns:   data  -- A data frame.
+# Arguments: fn -- A filename (.csv).
+# Returns: data -- A data frame.
 read_csv <- function( fn ){
   stopifnot( file.exists( fn ) )
   
@@ -142,11 +146,11 @@ read_csv <- function( fn ){
 # ----------------------------------------------------------
 # savedata
 # Save a data frame
-#     Arguments: df        -- A data frame to save.
-#                extension -- file extension. Default = .csv
+# Arguments: df -- A data frame to save.
+# extension -- file extension. Default = .csv
 savedata <- function( d, extension=".csv" ) {
   stopifnot( file.exists( OUTPUT_DIR ) )
-  fn <- paste0( OUTPUT_DIR, "/", format( Sys.time(),"%d%B%Y" ),"_fluxes",extension )
+  fn <- paste0( OUTPUT_DIR, SEP, format( Sys.time(),"%d%B%Y" ),"_fluxes",extension )
   printlog( "Saving", fn )
   write.csv( d, fn, row.names=FALSE )
 } # savedata
@@ -154,7 +158,7 @@ savedata <- function( d, extension=".csv" ) {
 # ------------------------------------------------------------
 # plots
 # Plot and save time-series for CO2, CH4, and H2O. Requires 'xts.'
-#     Arguments: raw  -- A data frame with all gas data, not only those within an experiment.
+# Arguments: raw -- A data frame with all gas data, not only those within an experiment.
 #
 plots <- function( raw ){
   loadlibs( c( "xts" ) )
@@ -172,8 +176,8 @@ plots <- function( raw ){
 # ----------------------------------------------------------------------
 # r2
 # Get r^2 values for each measurement and for CO2, CH4, and H2O.
-#   Arguments: d -- A cleaned data frame.
-#   Returns      -- A vector containing each r^2 value.
+# Arguments: d -- A cleaned data frame.
+# Returns -- A vector containing each r^2 value.
 #
 quality_control <- function( d ) {
   
@@ -203,15 +207,15 @@ quality_control <- function( d ) {
   h2o_p <- h2o_p[ order( h2o_p$Measurement ), ]
   h2o_r2 <- h2o_r2[ order( h2o_r2$Measurement ), ]
   
-  return( c(co2_r2$R2, ch4_r2$R2, h2o_r2$R2, co2_p$p_val, ch4_p$p_val, h2o_p$p_val)  )
+  return( c(co2_r2$R2, ch4_r2$R2, h2o_r2$R2, co2_p$p_val, ch4_p$p_val, h2o_p$p_val) )
 }
 
 #------------------------------------------------------------------
 # split_at
 # Split a vector by a list of supplied indices into a list of vectors.
-#     Arguments: x   -- A vector.
-#                pos -- A list of indices.
-#     Returns:       -- A list of vectors split by pos.   
+# Arguments: x -- A vector.
+# pos -- A list of indices.
+# Returns: -- A list of vectors split by pos.
 #
 split_at <- function( x, pos ) unname( split( x, cumsum( seq_along( x ) %in% pos ) ) )
 
@@ -232,10 +236,10 @@ clean <- function( d ){
 
 #-------------------------------------------------------------------
 # get_cleaned_data_table
-# Remove extraneous entries, include measurement times, find peak values, and 
+# Remove extraneous entries, include measurement times, find peak values, and
 # prepare data table for analysis by removing data outside of measurements.
-#     Arguments: d          -- Raw data frame from file-input.
-#     Returns:   data.clean -- Cleaned data ready for analysis.
+# Arguments: d -- Raw data frame from file-input.
+# Returns: data.clean -- Cleaned data ready for analysis.
 #
 get_cleaned_data_table <- function( d, ft ) {
   buffer <- 30
@@ -249,6 +253,7 @@ get_cleaned_data_table <- function( d, ft ) {
   infl <- data.table( data.time,val=data.time )
   setattr( infl,"sorted","data.time" )
   infl <- infl[ J(measurements),.I,roll="nearest" ]
+  #print(infl)
   
   # get co2 for each experiment, find peak values.
   data.dco2 <- split_at( d$H2O, infl$.I )[ -1 ]
@@ -279,16 +284,16 @@ get_cleaned_data_table <- function( d, ft ) {
 #---------------------------------------------------------
 # correct_time
 # Get times for a measurement w/ start time at zero.
-#     Arguments: d -- data frame containing data from one measurement.
-#     Returns:     -- all times minus start time.
+# Arguments: d -- data frame containing data from one measurement.
+# Returns: -- all times minus start time.
 #
 correct_time <- function( d ){ d$Time - d$Time[ 1 ] }
 
 #---------------------------------------------------------
 # compute_flux
 # Compute flux values for CO2, CH4, and H2O
-#     Arguments: d -- data frame containing data from one measurement.
-#     Returns:   ret -- A vector with flux values and average temperature.
+# Arguments: d -- data frame containing data from one measurement.
+# Returns: ret -- A vector with flux values and average temperature.
 #
 compute_flux <- function( d ) {
 
@@ -301,28 +306,28 @@ compute_flux <- function( d ) {
 
   #l <- lm( as.numeric(d$CO2,d$CH4,d$H2O) ~ as.numeric(time))
   
-  Resp_raw_co2 <- as.numeric( coef( mco2 )[ 2 ] )  # i.e. the co2 slope.
-  Resp_raw_ch4 <- as.numeric( coef( mch4 )[ 2 ] )  # i.e. the ch4 slope.
-  Resp_raw_h2o <- as.numeric( coef( mh2o )[ 2 ] )  # i.e. the h20 slope.
+  Resp_raw_co2 <- as.numeric( coef( mco2 )[ 2 ] ) # i.e. the co2 slope.
+  Resp_raw_ch4 <- as.numeric( coef( mch4 )[ 2 ] ) # i.e. the ch4 slope.
+  Resp_raw_h2o <- as.numeric( coef( mh2o )[ 2 ] ) # i.e. the h20 slope.
   
   # We want to convert raw respiration (d[CO2]/dt) to a flux using
   # A = dC/dt * V/S * Pa/RT (e.g. Steduto et al. 2002), where
-  #   A is CO2 flux (umol/m2/s)
+  # A is CO2 flux (umol/m2/s)
   # dC/dt is raw respiration as above (mole fraction/s)
-  #   V is total chamber volume (m3)
-  #   ...we are correcting for varying headspaces in the cores
+  # V is total chamber volume (m3)
+  # ...we are correcting for varying headspaces in the cores
   # S is ground surface area (m2)
-  #   ...but we're computing per kg of soil, so using dry mass instead
+  # ...but we're computing per kg of soil, so using dry mass instead
   # Pa is atmospheric pressure (kPa)
   # R is universal gas constant (8.3 x 10-3 m-3 kPa mol-1 K-1)
-  # T is air temperature (K) 
+  # T is air temperature (K)
   
   V <- ( SLINE_V + SC_V + LGR_V ) * 1.0e-6 # cm3 -> m3
   S <- (pi * ( SC_DIAM / 2 ) ^ 2) * 1.0e-4 # cm2 -> m2
   
-  R       <- 8.3145e-3                            # m-3 kPa mol-1 K-1
-  Kelvin    <- 273.15                             # C to K conversion
-  avg_temp  <- mean( d$T ) + Kelvin
+  R <- 8.3145e-3 # m-3 kPa mol-1 K-1
+  Kelvin <- 273.15 # C to K conversion
+  avg_temp <- mean( d$T ) + Kelvin
   Pa <- 101 #kPa TODO: verify with site.
 
   # umol m-2 sec-1
@@ -339,9 +344,9 @@ compute_flux <- function( d ) {
 
 # -------------------------------------------------------
 # beyond_threshold
-# Determines if a measurement is up to r2 and p value standards. 
-#   Arguments:  qc -- Quality control data table.
-#  
+# Determines if a measurement is up to r2 and p value standards.
+# Arguments: qc -- Quality control data table.
+#
 beyond_threshold <- function( qc ){
   test_rp <- function( row ){
     r2 <- all(as.double(row[3:5]) >= MIN_R2)
@@ -354,9 +359,9 @@ beyond_threshold <- function( qc ){
 
 # ------------------------------------------------
 # get_alldata
-# Compute fluxes and merge with qc table. 
-# Arguments:  d  -- Data from all files, cleaned.
-#             qc -- Quality control data for all measurements.
+# Compute fluxes and merge with qc table.
+# Arguments: d -- Data from all files, cleaned.
+# qc -- Quality control data for all measurements.
 #
 get_alldata <- function( d, qc ){
   fluxes <- ddply( d, .( Measurement, Filename ), .fun=compute_flux )
@@ -403,7 +408,7 @@ data <- raw[ , get_cleaned_data_table( .SD,files ),by=Filename,.SDcols=colnames(
 printlog( "Running quality-control." )
 qc <- as.data.table(ddply( data,.( Filename,Measurement ),.fun=quality_control))
 
-setnames( qc,c( "Measurement", "V1",  "V2",
+setnames( qc,c( "Measurement", "V1", "V2",
               "V3", "V4", "V5", "V6" ),
             c( "Measurement","CO2_r2","CH4_r2",
               "H2O_r2","CO2_p","CH4_p","H2O_p" ) )
