@@ -52,12 +52,12 @@ Here is the output:
 
 	Usage: ./LGR_fluxes foldername [options]
 
-Options:
-    -h, --help            show this help message and exit
-    -s START, --start=START start date formatted 'dd/mm/yyyy'
-    -e END, --end=END     end date formatted 'dd/mm/yyyy'
-    -g, --graph           output graphs.
-    -v, --verbose         print file name.
+	Options:
+    		-h, --help            show this help message and exit
+    		-s START, --start=START start date formatted 'dd/mm/yyyy'
+    		-e END, --end=END     end date formatted 'dd/mm/yyyy'
+    		-g, --graph           output graphs.
+    		-v, --verbose         print file name.
 
 Some examples of usage may be the following:
 
