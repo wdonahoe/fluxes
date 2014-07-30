@@ -10,7 +10,7 @@ import platform
 SCRIPT_NAME = "LGR_fluxes.R"
 platform = platform.system() != "Windows"
 
-def run(foldername, start, end, graph, r):
+def run(foldername, start, end, graph, r, large):
 	""" Execute SCRIPT_NAME with time series parameters.
 
 	Arguments:
@@ -49,13 +49,15 @@ def main():
 		dest="graph",help="output graphs.",default=False)
 	parser.add_option('-r','--rsquared',type="float",action="store",
 		dest="r",help="specify minimum r-squared value.",default=0.8)
+	parser.add_option('-l','--large',action='store_true',
+		dest='large',help="specify whether used large or small chamber.",default=False)
 
 	(options, args) = parser.parse_args()
 
 	if len(args) < 1 or len(args) > 4:
 		parser.error("incorrect number of arguments.")
 	else:
-		run(args[0], options.start, options.end, options.graph, options.r)
+		run(args[0], options.start, options.end, options.graph, options.r, options.large)
 
 if __name__ == "__main__":
 	main()
