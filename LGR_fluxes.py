@@ -28,7 +28,7 @@ def run(foldername, start, end, graph, r):
 			print "OS error({0}): {1}".format(e.errno, e.strerror)
 	else:
 		try:
-			subprocess.call(["Rscript"] + [SCRIPT_NAME] + [str(v) for k, v in sorted(locals().items())])
+			subprocess.call(["Rscriptl"] + [SCRIPT_NAME] + [str(v) for k, v in sorted(locals().items())])
 		except OSError as e:
 			print "OS error({0}): {1}".format(e.errno, e.strerror)
 
