@@ -174,13 +174,13 @@ read_csv <- function( fn ){
 savedata <- function( d, extension=".csv" ) {
 
   	stopifnot( file.exists( OUTPUT_DIR ) )
-  	fn <- paste0( OUTPUT_DIR, SEP, format( Sys.time(),"%d%B%Y-%H:%M:%S" ),"_fluxes",extension )
+  	fn <- paste0( OUTPUT_DIR, SEP, format( Sys.time(),"%d%B%Y_%H%M%S" ),"_fluxes",extension )
   	printlog( "Saving", fn )
   	write.csv( d, fn, row.names=FALSE )
 
 } # savedata
 
-get_n_split <- function( str, sep, n ){	return( unlist( strsplit( str, sep ) )[ n ] ) }
+get_n_split <- function( str, sep, n ){	return( unlist( strsplit( str, sep ,fixed=TRUE) )[ n ] ) }
 
 # ------------------------------------------------------------
 # plots
