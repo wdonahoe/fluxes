@@ -306,11 +306,13 @@ get_cleaned_data_table <- function( d, ft ) {
   	setattr( infl,"sorted","data.time" )
   	start <- infl[ J(measurements),.I,roll="nearest" ]
 	peaks <- infl[ J(ends),.I,roll="nearest" ]
+	
+	print(peaks)
   
- 	measures <- paste0( "Measurement",seq( 1:( length( peaks$.I ) - 1 ) ) )
+ 	measures <- paste0( "Measurement",seq( 1:( length( peaks$.I ) ) ) )
   	clean <- list()
 
-  	for (i in 1:( nrow( start ) - 1) ) {
+  	for (i in 1:( nrow( start ) ) ) {
 
     		clean[[i]] <- seq( start$.I[i],peaks$.I[i] )
 
