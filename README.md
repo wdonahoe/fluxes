@@ -1,4 +1,4 @@
-LGR_fluxes v1.1
+LGR_fluxes v1.2
 =============================
 
 Author: William Donahoe, wdonahoe@udel.edu, 2014
@@ -20,20 +20,20 @@ To first use LGR_fluxes, unpack the compressed file.
 On linux or OSX,
 ------------------------------------
 
-1) cd to the folder containing LGR_fluxes-1.1.tar.gz on the terminal and type:
+1) cd to the folder containing LGR_fluxes-1.2.tar.gz on the terminal and type:
 
-$ tar -zxvf LGR_fluxes-1.1.tar.gz
+$ tar -zxvf LGR_fluxes-1.2.tar.gz
 
 OR
 
-2) Double click on the "LGR_fluxes-1.1.tar.gz" icon and click "Extract."
+2) Double click on the "LGR_fluxes-1.2.tar.gz" icon and click "Extract."
 
-This will extract LGR_fluxes, LGR_fluxes.R, README.md, and LICENSE into a folder "LGR_fluxes-1.1."
+This will extract LGR_fluxes, LGR_fluxes.R, README.md, and LICENSE into a folder "LGR_fluxes-1.2."
 
 On Windows, 
 ------------------------------------
 
-1) Double click "LGR_fluxes-1.1-win.zip" to extract.
+1) Double click "LGR_fluxes-1.2-win.zip" to extract.
 
 
 Usage
@@ -66,25 +66,32 @@ OR
 Here is the output:
 
 	Options:
-  		-h, --help              show this help message and exit
-  		-s START, --start=START start date formatted '%d/%M/%Y'
-  		-e END, --end=END       end date formatted '%d/%M/%Y'
-  		-g, --graph             output graphs.
-  		-r R, --rsquared=R      specify minimum r-squared value.
-  		-l, --large             specify whether used large or small chamber.
+  		-h, --help            show this help message and exit
+  		-s START, --start=START 	start date formatted '%d/%M/%Y'
+							 default=01/01/1970
+  		-e END, --end=END     end date formatted '%d/%M/%Y' 
+						default=today
+  		-g, --graph           output graphs 
+						default=False
+  		-t T, --time=T        specify the length of the measurement in minutes
+                        			default=2.0
+  		-l, --large           specify whether used large or small chamber
+                        			default=False
 
 
 Some examples of usage may be the following:
 
-	$ ./LGR_fluxes data --start=06/22/2013 --end==06/25/2013 -g -l
+	$ ./LGR_fluxes data --start=06/22/2013 --end==06/25/2013 -g -l -t 2.2
 
-	> ./LGR_fluxes data -s 06/22/2013 -e 06/25/2013 --graph=False
+	> ./LGR_fluxes data -s 06/22/2013 -e 06/25/2013 --graph=False --time=2.1
 
 You don't need to supply start and end dates if you want all available files read-in:
 
-	$ ./LGR_fluxes data -l
+	$ ./LGR_fluxes data -l -t 1.5
 
 	> ./LGR_fluxes data -g
+
+NOTE: Arguments do not need to be in any kind of order, and you can mix "--x=y" style with "-x y" style. 
 
 Proper Input
 ======================================
@@ -93,19 +100,20 @@ LGR_fluxes looks in the user-supplied directory for .txt files of the following 
 
 gga(DATE)(...).txt
 
-A requirement for this script to run is a .txt for EACH INPUT FILE containing the POSIX time for each measurement of the form (gga_filename)_measurements.txt.
+A requirement for this script to run is a .txt file for EACH INPUT FILE containing the POSIX time for each measurement and the 
+average temperature during that measurement of the form (gga_filename)_measurements.txt.
 
-It must be formatted as follows:
+It must be formatted as follows: (TAB seperated)
 
 EX:
 
-Time
+Time	Temp
 
-06/25/2014 08:06:14.000
-06/25/2014 08:11:12.000
-06/25/2014 08:15:16.000
-06/25/2014 08:19:24.000
-06/25/2014 08:23:10.000
+06/25/2014 08:06:14.000	28.1
+06/25/2014 08:11:12.000	28.2
+06/25/2014 08:15:16.000	28.5
+06/25/2014 08:19:24.000	28.6
+06/25/2014 08:23:10.000	28.7
 ...
 
 An overview of the directory you will be working in may look like the following:

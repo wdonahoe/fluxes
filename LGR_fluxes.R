@@ -8,11 +8,10 @@ END <- args[ 1 ]
 INPUT_DIR <- args[ 2 ]
 GRAPH <- args[ 3 ]
 LARGE <- args[ 4 ]
-MIN_R2 <- args[ 5 ]
-START <- args[ 6 ]
+START <- args[ 5 ]
+LENGTH <- as.numeric(args[ 6 ]) * 100
 SCRIPTNAME <- "LGR_fluxes.R"
 OUTPUT_DIR <- "out"
-MAX_P <- 0.05
 
 SEP <- ifelse(Sys.info()['sysname'] != "Windows","/","\\")
 
@@ -172,11 +171,19 @@ read_csv <- function( fn ){
 # Arguments: df -- A data frame to save.
 # extension -- file extension. Default = .csv
 savedata <- function( d, extension=".csv" ) {
+	
+	header <- paste("Measurement length:",as.character(LENGTH / 100),"minutes")
+	my.write <- function(x, file, header, f = write.csv, ...){
+		datafile <- file(file, open='wt')
+		on.exit(close(datafile))
+		if (!missing(header)) writeLines(header,con=datafile)
+		return( f(x, datafile, ...) )
+	}
 
   	stopifnot( file.exists( OUTPUT_DIR ) )
   	fn <- paste0( OUTPUT_DIR, SEP, format( Sys.time(),"%d%B%Y_%H%M%S" ),"_fluxes",extension )
   	printlog( "Saving", fn )
-  	write.csv( d, fn, row.names=FALSE )
+  	my.write( d, fn, header, write.csv, row.names=FALSE )
 
 } # savedata
 
@@ -262,8 +269,8 @@ split_at <- function( x, pos ) unname( split( x, cumsum( seq_along( x ) %in% pos
 clean <- function( d ){
 
  	# keep the data we need.
- 	 d <- d[ ,colnames( d )%in%c( "Time","X.CO2.d_ppm","X.CH4.d_ppm","X.H2O._ppm","AmbT_C","filename" ) ]
-  	names( d ) <- c( "Time","H2O","CH4","CO2","T","Filename" )
+ 	 d <- d[ ,colnames( d )%in%c( "Time","X.CO2.d_ppm","X.CH4.d_ppm","X.H2O._ppm","filename" ) ]
+  	names( d ) <- c( "Time","H2O","CH4","CO2","Filename" )
   
   	data <- data.table( d )
   	setkey( data,Time )
@@ -285,38 +292,39 @@ clean <- function( d ){
 #
 get_cleaned_data_table <- function( d, ft ) {
 
- 	 buffer <- 30
+ 	buffer <- 20
 
   	data.time <- d$Time
   
-  	measurements <- read.table( as.character( ft[ match( d$Filename[ 1 ],ft$Filename ),"Measurement" ] ),sep="\t",header=TRUE )
-  	measurements <- sapply( measurements,function(x){as.POSIXct(x,format=FORMATL)+buffer})[ ,1 ]
+  	measurementsf <- read.table( as.character( ft[ match( d$Filename[ 1 ],ft$Filename ),"Measurement" ] ),sep="\t",header=TRUE )
+  	measurements <- sapply( measurementsf$Time,function(x){as.POSIXct(x,format=FORMATL)+buffer})
+	temps <- sapply( measurementsf$Temp,as.numeric)
+	ends <- as.numeric(measurements) + LENGTH - buffer
 
   	# find the nearest timestamp in data for each time stamp in measurements.
   	infl <- data.table( data.time,val=data.time )
   	setattr( infl,"sorted","data.time" )
-  	infl <- infl[ J(measurements),.I,roll="nearest" ]
+  	start <- infl[ J(measurements),.I,roll="nearest" ]
+	peaks <- infl[ J(ends),.I,roll="nearest" ]
   
-  	# get co2 for each experiment, find peak values.
-  	data.dco2 <- split_at( d$CO2, infl$.I )[ -1 ]
-  	infl$peaks <- infl$.I + ldply( data.dco2,function( x ) match( max( x ),x ) )
-  
- 	measures <- paste0( "Measurement",seq( 1:( length( infl$peaks ) - 1 ) ) )
+ 	measures <- paste0( "Measurement",seq( 1:( length( peaks$.I ) - 1 ) ) )
   	clean <- list()
 
-  	for (i in 1:( nrow( infl ) - 1) ) {
+  	for (i in 1:( nrow( start ) - 1) ) {
 
-    		clean[[i]] <- seq( infl$.I[i],infl$peaks[i] )
+    		clean[[i]] <- seq( start$.I[i],peaks$.I[i] )
 
   	}
   
   	# pre-allocate list because it is long
   	l <- length(clean)
   	meas <- my_list(l)
+	avg_temps <- my_list(l)
 
   	for ( i in 1:l ){
 
     		meas[[i]] <- replicate( length( clean[[i]] ),measures[i] )
+		avg_temps[[i]] <- replicate( length( clean[[i]] ), temps[i] )
 
   	}
 
@@ -324,6 +332,7 @@ get_cleaned_data_table <- function( d, ft ) {
   	# remove data not in experiments.
   	data.clean <- d[ unlist( clean ) ]
   	data.clean$Measurement <- unlist( meas )
+	data.clean$Temp <- unlist(avg_temps)
   
   	return ( data.clean )
   
@@ -373,7 +382,7 @@ compute_flux <- function( d ) {
   
   	R <- 8.3145e-3 # m-3 kPa mol-1 K-1
   	Kelvin <- 273.15 # C to K conversion
-  	avg_temp <- mean( d$T ) + Kelvin
+  	avg_temp <- mean( d$Temp ) + Kelvin
   	Pa <- 101 #kPa TODO: verify with site.
 
   	# umol m-2 sec-1
@@ -383,33 +392,12 @@ compute_flux <- function( d ) {
   	# umol m-2 sec-1
   	flux_H2O <- Resp_raw_h2o * ( V / S ) * Pa / ( R * avg_temp )
 
-  	ret <- c( start_time, flux_CO2, flux_CH4, flux_H2O, ( avg_temp - Kelvin ) )
-  	names( ret ) <- c( "Start_Time","flux_co2 [umol m-2 sec-1]", "flux_ch4 [nmol m-2 sec-1]", "flux_h2o [umol m-2 sec-1]", "Avg_Temp [C]" )
+  	ret <- c( flux_CO2, flux_CH4, flux_H2O, ( avg_temp - Kelvin ) )
+  	names( ret ) <- c( "flux_co2 [umol m-2 sec-1]", "flux_ch4 [nmol m-2 sec-1]", "flux_h2o [umol m-2 sec-1]", "Avg_Temp [C]" )
   	return( ret )
 
 } # compute_flux
 
-# -------------------------------------------------------
-# beyond_threshold
-# Determines if a measurement is up to r2 and p value standards.
-# Arguments: qc -- Quality control data table.
-#
-beyond_threshold <- function( qc ){
-
-  	test_rp <- function( row ){
-
-    		r2 <- all(as.double(row[3:5]) >= MIN_R2)
-    		p <- all(as.double(row[6:8]) <= MAX_P)
-
-    		return( r2 && p )
-
-  	}
-
-  	ret <- apply( qc,1,test_rp )
-
-  	return( ret )
-
-}
 
 # ------------------------------------------------
 # get_alldata
@@ -421,8 +409,6 @@ get_alldata <- function( d, qc ){
 
   	fluxes <- ddply( d, .( Measurement, Filename ), .fun=compute_flux )
   	alldata <- as.data.table( merge( fluxes, qc,by=c( "Filename","Measurement") ) )
-
-  	alldata <- alldata[ beyond_threshold( qc ) ]
 
 
   	# sort alldata table by measurement number.

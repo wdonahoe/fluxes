@@ -10,7 +10,7 @@ import platform
 SCRIPT_NAME = "LGR_fluxes.R"
 platform = platform.system() != "Windows"
 
-def run(foldername, start, end, graph, r, large):
+def run(foldername, start, end, graph, t, large):
 	""" Execute SCRIPT_NAME with time series parameters.
 
 	Arguments:
@@ -18,9 +18,10 @@ def run(foldername, start, end, graph, r, large):
 	graph -- do you want associated plots?
 	start -- start date in dd/mm/yyyy format.
 	end -- end date in dd/mm/yyyy format.
-	r -- minimum r-squared value.
+	t -- length of the measurement.
 
-	"""
+	"""	
+	
 	if platform:
 		try:
 			subprocess.call(["./" + SCRIPT_NAME] + [str(v) for k, v in sorted(locals().items())])
@@ -47,8 +48,8 @@ def main():
 		dest="end",help="end date formatted '%d/%M/%Y'",default=time.strftime("%d/%m/%Y"))
 	parser.add_option('-g','--graph',action="store_true",
 		dest="graph",help="output graphs.",default=False)
-	parser.add_option('-r','--rsquared',type="float",action="store",
-		dest="r",help="specify minimum r-squared value.",default=0.8)
+	parser.add_option('-t','--time',type="float",action="store",
+		dest="t",help="specify the length of the measurement in minutes.",default=2.0)
 	parser.add_option('-l','--large',action='store_true',
 		dest='large',help="specify whether used large or small chamber.",default=False)
 
@@ -57,7 +58,7 @@ def main():
 	if len(args) < 1 or len(args) > 4:
 		parser.error("incorrect number of arguments.")
 	else:
-		run(args[0], options.start, options.end, options.graph, options.r, options.large)
+		run(args[0], options.start, options.end, options.graph, options.t, options.large)
 
 if __name__ == "__main__":
 	main()
