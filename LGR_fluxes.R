@@ -115,13 +115,13 @@ my_list <- function( l ){ vector("list",l) }
 #
 loadlibs <- function( liblist ) {
 
-  	printlog( "Loading libraries..." )
+  	#printlog( "Loading libraries..." )
   	loadedlibs <- vector()
   	not_installed <- vector()
 
   	for( lib in liblist ) {
 
-    		printlog( "Loading", lib )
+    		#printlog( "Loading", lib )
     		loadedlibs[ lib ] <- require( lib, character.only=TRUE, warn.conflicts=FALSE )
     		if( !loadedlibs[ lib ] ){
 
@@ -133,13 +133,13 @@ loadlibs <- function( liblist ) {
 
   	if ( length(not_installed) != 0){
 
-    		print("Installing packages.")
+    		#print("Installing packages.")
     		chooseCRANmirror(graphics=FALSE,ind=85) # Choose USA (MD)
     		install.packages(not_installed)
 
 		for( lib in not_installed ) {
 
-			printlog( "Loading", lib )
+			#printlog( "Loading", lib )
 			loadedlibs[ lib ] <- require( lib, character.only=TRUE, warn.conflicts=FALSE )
 
 		}	
@@ -194,7 +194,7 @@ get_n_split <- function( str, sep, n ){	return( unlist( strsplit( str, sep ,fixe
 # Plot and save time-series for CO2, CH4, and H2O. Requires 'xts.'
 # Arguments: raw -- A data frame with all gas data, not only those within an experiment.
 #
-plots <- function( raw ){
+plots <- function( raw, measurements ){
 
   	out <- paste0(OUTPUT_DIR,SEP,"time_series")
 
@@ -206,14 +206,13 @@ plots <- function( raw ){
   	}
 
   	raw.xts <- as.xts( raw, order.by=as.POSIXct( raw$Time,format=FORMATL ) )
-  	names <- c( "H2O","CH4","CO2" )
-  	pdf( file=paste0( out,SEP,get_n_split( get_n_split( raw$Filename,SEP,2 ),"\\.",1 ),"_plot.pdf" ) )
-  	par( cex=.7, las=1 )
+  	names <- c( "H2O Concentration vs. Time","CH4 Concentration vs. Time","CO2 Concentration vs. Time" )
+  	pdf( file=paste0( out,SEP,get_n_split( get_n_split( raw$Filename,SEP,2 ),"\\.",1 ),"_plot.pdf" ))
+  	par( cex.main=1.7, cex.labels=1.2, las=1)
 
   	for ( i in seq( 4,2 ) ){
-
-    		plot( raw.xts[ ,i,with=FALSE ],major.format=F,minor.ticks=FALSE,main=names[ i-1 ],xlab="Time",ylab="ppm" )
-
+    		plot( raw.xts[ ,i,with=FALSE ],major.format=F,minor.ticks=FALSE,main=names[ i-1 ],xlab="Time",ylab="Concentration [ppm]")
+		lines( measurements, col="red" )
   	}
 
   	graphics.off()
@@ -306,8 +305,6 @@ get_cleaned_data_table <- function( d, ft ) {
   	setattr( infl,"sorted","data.time" )
   	start <- infl[ J(measurements),.I,roll="nearest" ]
 	peaks <- infl[ J(ends),.I,roll="nearest" ]
-	
-	print(peaks)
   
  	measures <- paste0( "Measurement",seq( 1:( length( peaks$.I ) ) ) )
   	clean <- list()
@@ -440,8 +437,8 @@ if( !file.exists( OUTPUT_DIR ) ) {
 
 loadlibs( c( "plyr", "data.table" ) )
 
-cat("------------------------\n")
-printlog( "Getting and cleaning data." )
+#cat("------------------------\n")
+#printlog( "Getting and cleaning data." )
 raw <- data.table()
 data <- data.table()
 
@@ -455,7 +452,7 @@ for ( fn in files$Filename ){
 
 data <- raw[ , get_cleaned_data_table( .SD,files ),by=Filename,.SDcols=colnames( raw ) ]
 
-printlog( "Running quality-control." )
+#printlog( "Running quality-control." )
 qc <- as.data.table(ddply( data,.( Filename,Measurement ),.fun=quality_control))
 
 setnames( qc,c( "Measurement", "V1", "V2",
@@ -463,7 +460,7 @@ setnames( qc,c( "Measurement", "V1", "V2",
             c( "Measurement","CO2_r2","CH4_r2",
               "H2O_r2","CO2_p","CH4_p","H2O_p" ) )
 
-printlog( "Computing fluxes and combining data from all files." )
+#printlog( "Computing fluxes and combining data from all files." )
 alldata <- get_alldata( data, qc )
 
 savedata( alldata )
@@ -471,11 +468,11 @@ savedata( alldata )
 if ( GRAPH ){
 
   	loadlibs( c( "xts" )  )
-  	raw[, plots( .SD ), by=Filename,.SDcols=colnames( raw ) ]
+  	raw[, plots( .SD, alldata[,1] ), by=Filename,.SDcols=colnames( raw ) ]
 
 }
 
-printlog( "All done with", SCRIPTNAME )
+#printlog( "All done with", SCRIPTNAME )
 
 
 
